@@ -1,0 +1,20 @@
+PS C:\> az login --allow-no-subscription --tenant "3d0ecda6-e265-404a-8aaa-556795fd3d1f"
+The default web browser has been opened at https://login.microsoftonline.com/3d0ecda6-e265-404a-8aaa-556795fd3d1f/oauth2/authorize. Please continue the login in the web brows
+er. If no web browser is available or if the web browser fails to open, use device code flow with `az login --use-device-code`.
+You have logged in. Now let us find all the subscriptions to which you have access...
+[
+  {
+    "cloudName": "AzureCloud",
+    "homeTenantId": "3d0ecda6-e265-404a-8aaa-556795fd3d1f",
+    "id": "c816f77e-07f5-4524-905b-c34f98b70637",
+    "isDefault": true,
+    "managedByTenants": [],
+    "name": "Azure subscription 1",
+    "state": "Enabled",
+    "tenantId": "3d0ecda6-e265-404a-8aaa-556795fd3d1f",
+    "user": {
+      "name": "amanankit2021@outlook.com",
+      "type": "user"
+    }
+  }
+]
