@@ -1,0 +1,108 @@
+1. VS code
+2. Github Repo
+3. Jenkins
+4. MS Azure Subscription
+
+1. Create service principal
+2. Create storage account and storage container. Setup remote backend for terraform
+
+Once jenkins is up need to install azure credential and terraform plugin
+
+Setup remote backend for terraform:-
+
+step 1- Remote state with storage account
+
+Create storage account:-
+az group create --location westus2 --name rg-terraformstate
+az storage account create --name terrastatestorage2134 --resource-group rg-terraformstate --location westus2 --sku Standard_LRS
+az storage container create --name terraformdemo --account-name terrastatestorage2134
+
+Need to create backend block in terraform config file. The backend tells where to store the state, either locally or remote location. If backend is not declared, the state will store locally by default. 
+We will use azure cloud shell which is authenticated to Azure CLI. We could authenticate storage account with an MSI, Storage key or SAS token. Create main.tf file
+
+#Set up remote state
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "rg-terraformstate"
+    storage_account_name = "terrastatestorage2131"
+    container_name       = "terraformdemo"
+    key                  = "dev.terraform.tfstate"
+  }
+}
+
+#configure azurerm provider
+provider "azurerm" {
+  version = "1.38"
+}
+
+#create resource group
+resource "azurerm_resource_group" "rg" {
+    name     = "rg-remotestatedemo"
+    location = "westus2"
+}
+
+Step 2: Remote state with terraform cloud
+
+1. Login to terraform cloud
+2. Select the profile and create API token. Copy the key
+3. Create a Terraform CLI configuration file to store the token. The CLI configuration file is .terraformrc
+
+tee -a $HOME/.terraformrc << END
+credentials "app.terraform.io" {
+  token = "ZAzaAmyoXzQ9vw.atlasv1.Hy5GtsZ0HH3swzzgmG1MLg96VEm33nJkkzfNZzBKEHEQ19cN5IAbRSamFneIt7r7HpE"
+}
+END
+
+4. Check the token at location - cat $HOME/.terraformrc
+5. Run main.tf file to configure remote state
+
+#Set up remote state
+terraform {
+  backend "remote" {
+    organization = "amanankit"
+
+    workspaces {
+      name = "terraformaman"
+    }
+  }
+}
+
+#configure azurerm provider
+provider "azurerm" {
+  version = "1.38"
+}
+
+#create resource group
+resource "azurerm_resource_group" "rg" {
+    name     = "rg-remotestatetfc"
+    location = "westus2"
+}
+
+while executing "terraform plan". We get below error.
+
+Error: Error building AzureRM Client: Azure CLI Authorization Profile was not found. Please ensure the Azure CLI is installed and then log-in with `az login`.
+
+  on main.tf line 13, in provider "azurerm":
+  13: provider "azurerm" {
+
+Solution -> Go to terraform cloud and change the Execution mode to local.
+
+6. Create a service principal in azure and provide contributor role to azure
+
+az ad sp create-for-rbac -n "amanankit" --role contributor \ --scopes /subscriptions/c816f77e-07f5-4524-905b-c34f98b70637
+
+
+7. Add environment variable to terraform workspace and change back execution mode to remote and run terraform apply 
+ARM_CLIENT_ID 
+ARM_CLIENT_SECRET
+ARM_SUBSCRIPTION_ID 
+ARM_TENANT_ID 
+
+
+Step 3: Accessing output from Remote space. Add below in code
+
+#output
+output "rg" {
+  value = azurerm_resource_group.rg
+}
+
